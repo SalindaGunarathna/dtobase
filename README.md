@@ -131,8 +131,11 @@ Example for `com.example.model.User`:
 
 ### Alias usage
 ```java
-@IncludeInDto({"UserCreateDto", "UserUpdateDto", "UserResponseDto"})
+@IncludeInDto(dtos = {"UserCreateDto", "UserUpdateDto", "UserResponseDto"})
 private String email;
+
+@IncludeInDto({"UserCreateDto", "UserUpdateDto", "UserResponseDto"})
+private String username;
 ```
 
 ### Notes
@@ -165,4 +168,5 @@ All tests are documented in:
 
 ## Known Requirements
 Mappers rely on standard JavaBean getters/setters. If accessors are missing or mismatched, compilation fails.
+
 
