@@ -12,9 +12,21 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class DtoGenerator {
+
+    private static class FieldSpec {
+        private final String type;
+        private final String name;
+
+        private FieldSpec(String type, String name) {
+            this.type = type;
+            this.name = name;
+        }
+    }
 
     public static void generate(ProcessingEnvironment env,
                                 TypeElement entity,
@@ -39,6 +51,8 @@ public class DtoGenerator {
 
                 writer.write("package " + packageName + ";\n\n");
                 writer.write("public class " + dtoName + " {\n\n");
+
+                List<FieldSpec> dtoFields = new ArrayList<>();
 
                 for (Element field : entity.getEnclosedElements()) {
 
@@ -127,10 +141,16 @@ public class DtoGenerator {
                                             "(" + type + " " + targetName +
                                             ") { this." + targetName +
                                             " = " + targetName + "; }\n\n");
+
+                                    dtoFields.add(new FieldSpec(type, targetName));
                                 }
                             }
                         }
                     }
+                }
+
+                if (config.generateBuilder()) {
+                    writeBuilder(writer, dtoName, dtoFields);
                 }
 
                 writer.write("}\n");
@@ -163,6 +183,25 @@ public class DtoGenerator {
                     field
             );
         }
+    }
+
+    private static void writeBuilder(Writer writer, String dtoName, List<FieldSpec> fields)
+            throws Exception {
+        writer.write("    public static Builder builder() { return new Builder(); }\n\n");
+        writer.write("    public static class Builder {\n");
+        writer.write("        private final " + dtoName + " dto = new " + dtoName + "();\n\n");
+
+        for (FieldSpec field : fields) {
+            writer.write("        public Builder " + field.name +
+                    "(" + field.type + " " + field.name + ") {\n");
+            writer.write("            dto.set" + capitalize(field.name) +
+                    "(" + field.name + ");\n");
+            writer.write("            return this;\n");
+            writer.write("        }\n\n");
+        }
+
+        writer.write("        public " + dtoName + " build() { return dto; }\n");
+        writer.write("    }\n\n");
     }
 
     private static String stripTypeAnnotations(String type) {
@@ -214,4 +253,3 @@ public class DtoGenerator {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 }
-

@@ -21,9 +21,10 @@ public @interface Dto {
 
     NullHandling nullHandling() default NullHandling.IGNORE_NULLS;
 
-    boolean copyValidation() default true;
+    boolean copyValidation() default false;
 
     ValidationNamespace validationNamespace() default ValidationNamespace.JAKARTA;
 
     boolean generateBuilder() default false;
 }
+
