@@ -12,6 +12,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 import java.io.Writer;
+import java.util.Locale;
 
 public class DtoGenerator {
 
@@ -21,10 +22,14 @@ public class DtoGenerator {
 
         try {
 
-            String dtoName = config.name() + "Base";
+            String dtoName = config.name();
+
+            String entityPackage = env.getElementUtils().getPackageOf(entity).toString();
+            String entityNameLower = entity.getSimpleName().toString().toLowerCase(Locale.ROOT);
+            String defaultPackageName = defaultPackage(entityPackage, "dto", entityNameLower);
 
             String packageName = config.packageName().isEmpty()
-                    ? env.getElementUtils().getPackageOf(entity).toString()
+                    ? defaultPackageName
                     : config.packageName();
 
             JavaFileObject file = env.getFiler()
@@ -198,7 +203,15 @@ public class DtoGenerator {
         return out.toString().trim().replaceAll("\\s+", " ");
     }
 
+    private static String defaultPackage(String basePackage, String segment, String entityLowerName) {
+        if (basePackage == null || basePackage.isEmpty()) {
+            return segment + "." + entityLowerName;
+        }
+        return basePackage + "." + segment + "." + entityLowerName;
+    }
+
     private static String capitalize(String s) {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 }
+

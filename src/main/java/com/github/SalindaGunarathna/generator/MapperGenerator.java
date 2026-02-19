@@ -13,6 +13,7 @@ import javax.tools.JavaFileObject;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MapperGenerator {
 
@@ -36,17 +37,18 @@ public class MapperGenerator {
             String entityName = entity.getSimpleName().toString();
             String entityPackageName = env.getElementUtils().getPackageOf(entity).toString();
             String entityQualifiedName = entity.getQualifiedName().toString();
+            String entityNameLower = entityName.toLowerCase(Locale.ROOT);
 
             String dtoName = config.name();
-            String dtoClassName = dtoName + "Base";
+            String dtoClassName = dtoName;
             String mapperName = dtoName + "Mapper";
 
             String dtoPackageName = config.packageName().isEmpty()
-                    ? entityPackageName
+                    ? defaultPackage(entityPackageName, "dto", entityNameLower)
                     : config.packageName();
 
             String mapperPackageName = config.mapperPackageName().isEmpty()
-                    ? dtoPackageName
+                    ? defaultPackage(entityPackageName, "mapper", entityNameLower)
                     : config.mapperPackageName();
 
             String entityTypeForSource = mapperPackageName.equals(entityPackageName)
@@ -198,7 +200,15 @@ public class MapperGenerator {
         }
     }
 
+    private static String defaultPackage(String basePackage, String segment, String entityLowerName) {
+        if (basePackage == null || basePackage.isEmpty()) {
+            return segment + "." + entityLowerName;
+        }
+        return basePackage + "." + segment + "." + entityLowerName;
+    }
+
     private static String capitalize(String s) {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 }
+
