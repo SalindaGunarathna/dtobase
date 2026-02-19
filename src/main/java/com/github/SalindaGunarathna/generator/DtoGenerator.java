@@ -87,8 +87,8 @@ public class DtoGenerator {
                             for (int i = 0; i < dtoNames.length; i++) {
                                 if (dtoNames[i].equals(config.name())) {
 
-                                    String type =
-                                            field.asType().toString();
+                                    String rawType = field.asType().toString();
+                                    String type = stripTypeAnnotations(rawType);
                                     String sourceName =
                                             field.getSimpleName().toString();
 
@@ -158,6 +158,44 @@ public class DtoGenerator {
                     field
             );
         }
+    }
+
+    private static String stripTypeAnnotations(String type) {
+        StringBuilder out = new StringBuilder();
+        int i = 0;
+        while (i < type.length()) {
+            char c = type.charAt(i);
+            if (c == '@') {
+                i++;
+                while (i < type.length()) {
+                    char ch = type.charAt(i);
+                    if (Character.isWhitespace(ch) || ch == '(') {
+                        break;
+                    }
+                    i++;
+                }
+                if (i < type.length() && type.charAt(i) == '(') {
+                    int depth = 1;
+                    i++;
+                    while (i < type.length() && depth > 0) {
+                        char ch = type.charAt(i);
+                        if (ch == '(') {
+                            depth++;
+                        } else if (ch == ')') {
+                            depth--;
+                        }
+                        i++;
+                    }
+                }
+                while (i < type.length() && Character.isWhitespace(type.charAt(i))) {
+                    i++;
+                }
+                continue;
+            }
+            out.append(c);
+            i++;
+        }
+        return out.toString().trim().replaceAll("\\s+", " ");
     }
 
     private static String capitalize(String s) {
