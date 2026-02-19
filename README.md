@@ -129,6 +129,12 @@ Example for `com.example.model.User`:
 | `targets` | Rename field per DTO (same length as `dtos`) |
 | `copyValidation` | Per-DTO override for validation copying |
 
+### Alias usage
+```java
+@IncludeInDto({"UserCreateDto", "UserUpdateDto", "UserResponseDto"})
+private String email;
+```
+
 ### Notes
 - `dtos` and `value` are mutually exclusive.
 - `targets` length must match `dtos` length.
@@ -159,3 +165,4 @@ All tests are documented in:
 
 ## Known Requirements
 Mappers rely on standard JavaBean getters/setters. If accessors are missing or mismatched, compilation fails.
+
