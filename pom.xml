@@ -6,18 +6,7 @@
 
     <groupId>com.github.SalindaGunarathna</groupId>
     <artifactId>dtobase</artifactId>
-    <version>1.0-SNAPSHOT</version>
-
-    <dependencies>
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
-            <version>1.3.2</version>
-            <scope>provided</scope>
-        </dependency>
-    </dependencies>
-
-    <properties>
+    <version>1.0-SNAPSHOT</version>\r\n<properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
