@@ -21,10 +21,11 @@ public @interface Dto {
 
     NullHandling nullHandling() default NullHandling.IGNORE_NULLS;
 
+    IncludePolicy include() default IncludePolicy.ANNOTATED_ONLY;
+
     boolean copyValidation() default false;
 
     ValidationNamespace validationNamespace() default ValidationNamespace.JAKARTA;
 
     boolean generateBuilder() default false;
 }
-

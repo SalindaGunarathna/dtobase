@@ -1,7 +1,9 @@
 package com.github.SalindaGunarathna.generator;
 
 import com.github.SalindaGunarathna.annotations.Dto;
+import com.github.SalindaGunarathna.annotations.ExcludeInDto;
 import com.github.SalindaGunarathna.annotations.IncludeInDto;
+import com.github.SalindaGunarathna.annotations.IncludePolicy;
 import com.github.SalindaGunarathna.annotations.NullHandling;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -60,12 +62,49 @@ public class MapperGenerator {
                     : dtoPackageName + "." + dtoClassName;
 
             List<FieldMapping> mappings = new ArrayList<>();
+            IncludePolicy includePolicy = config.include();
 
             for (Element field : entity.getEnclosedElements()) {
                 if (field.getKind() == ElementKind.FIELD) {
                     IncludeInDto include = field.getAnnotation(IncludeInDto.class);
+                    ExcludeInDto exclude = field.getAnnotation(ExcludeInDto.class);
 
-                    if (include != null) {
+                    if (exclude != null) {
+                        String[] dtos = exclude.dtos();
+                        String[] value = exclude.value();
+
+                        if (dtos.length > 0 && value.length > 0) {
+                            env.getMessager().printMessage(
+                                    Diagnostic.Kind.ERROR,
+                                    "@ExcludeInDto should use either dtos or value, not both, on field " + field.getSimpleName(),
+                                    field
+                            );
+                            continue;
+                        }
+
+                        String[] dtoNames = dtos.length > 0 ? dtos : value;
+                        if (dtoNames.length == 0) {
+                            continue;
+                        }
+
+                        boolean excludedForThisDto = false;
+                        for (String dto : dtoNames) {
+                            if (dto.equals(config.name())) {
+                                excludedForThisDto = true;
+                                break;
+                            }
+                        }
+
+                        if (excludedForThisDto) {
+                            continue;
+                        }
+                    }
+
+                    if (includePolicy == IncludePolicy.ANNOTATED_ONLY) {
+                        if (include == null) {
+                            continue;
+                        }
+
                         String[] dtos = include.dtos();
                         String[] value = include.value();
 
@@ -112,7 +151,55 @@ public class MapperGenerator {
                                 break;
                             }
                         }
+                        continue;
                     }
+
+                    String sourceName = field.getSimpleName().toString();
+                    String targetName = sourceName;
+
+                    if (include != null) {
+                        String[] dtos = include.dtos();
+                        String[] value = include.value();
+
+                        if (dtos.length > 0 && value.length > 0) {
+                            env.getMessager().printMessage(
+                                    Diagnostic.Kind.ERROR,
+                                    "@IncludeInDto should use either dtos or value, not both, on field " + field.getSimpleName(),
+                                    field
+                            );
+                            continue;
+                        }
+
+                        String[] dtoNames = dtos.length > 0 ? dtos : value;
+                        String[] targets = include.targets();
+                        boolean hasTargets = targets != null && targets.length > 0;
+
+                        if (hasTargets && targets.length != dtoNames.length) {
+                            env.getMessager().printMessage(
+                                    Diagnostic.Kind.ERROR,
+                                    "@IncludeInDto targets length must match dtos/value length on field " + field.getSimpleName(),
+                                    field
+                            );
+                            continue;
+                        }
+
+                        if (dtoNames.length > 0) {
+                            for (int i = 0; i < dtoNames.length; i++) {
+                                if (dtoNames[i].equals(config.name())) {
+                                    if (hasTargets) {
+                                        String candidate = targets[i];
+                                        if (candidate != null && !candidate.trim().isEmpty()) {
+                                            targetName = candidate;
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    boolean isPrimitive = field.asType().getKind().isPrimitive();
+                    mappings.add(new FieldMapping(sourceName, targetName, isPrimitive));
                 }
             }
 
@@ -211,4 +298,3 @@ public class MapperGenerator {
         return s.substring(0,1).toUpperCase() + s.substring(1);
     }
 }
-

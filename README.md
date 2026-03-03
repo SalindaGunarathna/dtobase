@@ -12,6 +12,8 @@ Manual DTOs and mappers are repetitive, error-prone, and easy to drift from the 
 ## Features
 - Multiple DTOs per entity via repeatable `@Dto`
 - Field inclusion control with `@IncludeInDto`
+- Field exclusion control with `@ExcludeInDto`
+- Configurable inclusion policy (annotated-only or include-all)
 - Optional mapper generation (default on)
 - Optional `toEntity` and `updateEntity` generation
 - Null-handling strategy for update mapping
@@ -31,7 +33,7 @@ Add the dependency and the annotation processor path.
   <dependency>
     <groupId>io.github.salindagunarathna</groupId>
     <artifactId>dtobase</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1.1</version>
     <scope>provided</scope>
   </dependency>
 </dependencies>
@@ -47,7 +49,7 @@ Add the dependency and the annotation processor path.
           <path>
             <groupId>io.github.salindagunarathna</groupId>
             <artifactId>dtobase</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>0.1.1</version>
           </path>
         </annotationProcessorPaths>
       </configuration>
@@ -101,6 +103,20 @@ Example for `com.example.model.User`:
 - DTOs: `com.example.model.dto.user.*`
 - Mappers: `com.example.model.mapper.user.*`
 
+## Inclusion Policy
+By default, only fields annotated with `@IncludeInDto` are included.
+To include all fields unless excluded:
+
+```java
+@Dto(name = "UserDto", include = IncludePolicy.ALL_FIELDS)
+public class User {
+  // fields...
+}
+```
+
+In `ALL_FIELDS` mode, `@IncludeInDto` is optional and used only for per-DTO overrides
+(target rename and per-field validation copying).
+
 ## Class-Level Configuration (`@Dto`)
 
 | Option | Default | Description |
@@ -112,6 +128,7 @@ Example for `com.example.model.User`:
 | `generateToEntity` | `true` | Generate `toEntity` method |
 | `generateUpdate` | `false` | Generate `updateEntity` method |
 | `nullHandling` | `IGNORE_NULLS` | Update behavior for nulls |
+| `include` | `ANNOTATED_ONLY` | Field inclusion policy (annotated-only or include-all) |
 | `copyValidation` | `false` | Copy validation annotations to DTO |
 | `validationNamespace` | `JAKARTA` | Use Jakarta or Javax annotations |
 | `generateBuilder` | `false` | Generate DTO builder |
@@ -142,6 +159,18 @@ private String username;
 - `dtos` and `value` are mutually exclusive.
 - `targets` length must match `dtos` length.
 - If a target name is empty, it falls back to the source field name.
+- In `ALL_FIELDS` mode, `@IncludeInDto` only applies overrides for listed DTOs.
+
+## Field-Level Configuration (`@ExcludeInDto`)
+
+| Option | Description |
+| --- | --- |
+| `dtos` | List of DTO names to exclude this field |
+| `value` | Alias for `dtos` (use only one) |
+
+### Notes
+- If `dtos`/`value` are empty, the field is excluded from all DTOs.
+- `dtos` and `value` are mutually exclusive.
 
 ## Builder Generation
 Enable per DTO:
@@ -168,5 +197,3 @@ All tests are documented in:
 
 ## Known Requirements
 Mappers rely on standard JavaBean getters/setters. If accessors are missing or mismatched, compilation fails.
-
-

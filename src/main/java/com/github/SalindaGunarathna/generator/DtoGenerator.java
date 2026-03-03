@@ -1,7 +1,9 @@
 package com.github.SalindaGunarathna.generator;
 
 import com.github.SalindaGunarathna.annotations.Dto;
+import com.github.SalindaGunarathna.annotations.ExcludeInDto;
 import com.github.SalindaGunarathna.annotations.IncludeInDto;
+import com.github.SalindaGunarathna.annotations.IncludePolicy;
 import com.github.SalindaGunarathna.annotations.ValidationNamespace;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -58,10 +60,45 @@ public class DtoGenerator {
 
                     if (field.getKind() == ElementKind.FIELD) {
 
-                        IncludeInDto include =
-                                field.getAnnotation(IncludeInDto.class);
+                        IncludeInDto include = field.getAnnotation(IncludeInDto.class);
+                        ExcludeInDto exclude = field.getAnnotation(ExcludeInDto.class);
 
-                        if (include != null) {
+                        if (exclude != null) {
+                            String[] dtos = exclude.dtos();
+                            String[] value = exclude.value();
+
+                            if (dtos.length > 0 && value.length > 0) {
+                                env.getMessager().printMessage(
+                                        Diagnostic.Kind.ERROR,
+                                        "@ExcludeInDto should use either dtos or value, not both, on field " + field.getSimpleName(),
+                                        field
+                                );
+                                continue;
+                            }
+
+                            String[] dtoNames = dtos.length > 0 ? dtos : value;
+                            if (dtoNames.length == 0) {
+                                continue;
+                            }
+
+                            boolean excludedForThisDto = false;
+                            for (String dto : dtoNames) {
+                                if (dto.equals(config.name())) {
+                                    excludedForThisDto = true;
+                                    break;
+                                }
+                            }
+
+                            if (excludedForThisDto) {
+                                continue;
+                            }
+                        }
+
+                        if (config.include() == IncludePolicy.ANNOTATED_ONLY) {
+                            if (include == null) {
+                                continue;
+                            }
+
                             String[] dtos = include.dtos();
                             String[] value = include.value();
 
@@ -145,7 +182,91 @@ public class DtoGenerator {
                                     dtoFields.add(new FieldSpec(type, targetName));
                                 }
                             }
+                            continue;
                         }
+
+                        String rawType = field.asType().toString();
+                        String type = stripTypeAnnotations(rawType);
+                        String sourceName = field.getSimpleName().toString();
+
+                        String targetName = sourceName;
+                        boolean shouldCopyValidation = config.copyValidation();
+
+                        if (include != null) {
+                            String[] dtos = include.dtos();
+                            String[] value = include.value();
+
+                            if (dtos.length > 0 && value.length > 0) {
+                                env.getMessager().printMessage(
+                                        Diagnostic.Kind.ERROR,
+                                        "@IncludeInDto should use either dtos or value, not both, on field " + field.getSimpleName(),
+                                        field
+                                );
+                                continue;
+                            }
+
+                            String[] dtoNames = dtos.length > 0 ? dtos : value;
+                            String[] targets = include.targets();
+                            boolean[] copyValidation = include.copyValidation();
+
+                            boolean hasTargets = targets != null && targets.length > 0;
+                            boolean hasCopyValidation = copyValidation != null && copyValidation.length > 0;
+
+                            if (hasTargets && targets.length != dtoNames.length) {
+                                env.getMessager().printMessage(
+                                        Diagnostic.Kind.ERROR,
+                                        "@IncludeInDto targets length must match dtos/value length on field " + field.getSimpleName(),
+                                        field
+                                );
+                                continue;
+                            }
+
+                            if (hasCopyValidation && copyValidation.length != dtoNames.length) {
+                                env.getMessager().printMessage(
+                                        Diagnostic.Kind.ERROR,
+                                        "@IncludeInDto copyValidation length must match dtos/value length on field " + field.getSimpleName(),
+                                        field
+                                );
+                                continue;
+                            }
+
+                            if (dtoNames.length > 0) {
+                                for (int i = 0; i < dtoNames.length; i++) {
+                                    if (dtoNames[i].equals(config.name())) {
+                                        if (hasTargets) {
+                                            String candidate = targets[i];
+                                            if (candidate != null && !candidate.trim().isEmpty()) {
+                                                targetName = candidate;
+                                            }
+                                        }
+                                        if (hasCopyValidation) {
+                                            shouldCopyValidation = copyValidation[i];
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (shouldCopyValidation) {
+                            writeValidationAnnotations(env, field, writer, config);
+                        }
+
+                        writer.write("    private " + type +
+                                " " + targetName + ";\n");
+
+                        writer.write("\n    public " + type +
+                                " get" +
+                                capitalize(targetName) +
+                                "() { return " + targetName + "; }\n");
+
+                        writer.write("    public void set" +
+                                capitalize(targetName) +
+                                "(" + type + " " + targetName +
+                                ") { this." + targetName +
+                                " = " + targetName + "; }\n\n");
+
+                        dtoFields.add(new FieldSpec(type, targetName));
                     }
                 }
 

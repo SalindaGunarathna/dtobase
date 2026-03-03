@@ -2,7 +2,7 @@
 
 This document lists all automated tests and their intent.
 
-Total tests: 46
+Total tests: 51
 
 ## DtoClassLevelEdgeCasesTest.java
 
@@ -70,6 +70,14 @@ Total tests: 46
 - `includeInDto_multipleTargets_mapCorrectly` - Verifies multiple targets map correctly for multiple DTOs.
 - `includeInDto_emptyDtos_skipsField` - Verifies empty dtos/value arrays cause the field to be skipped.
 
+## DtoIncludePolicyConfigTest.java
+
+- `includePolicy_allFields_includesUnannotatedFields` - Verifies ALL_FIELDS includes unannotated fields and mappers map them.
+- `includePolicy_allFields_excludeInDto_excludesForDto` - Verifies @ExcludeInDto excludes a field for a specific DTO.
+- `excludeInDto_empty_excludesAllDtos` - Verifies empty @ExcludeInDto excludes a field from all DTOs.
+- `includePolicy_allFields_includeInDto_targets_overrideWithoutFiltering` - Verifies @IncludeInDto overrides targets without excluding other DTOs in ALL_FIELDS mode.
+- `excludeInDto_dtosAndValueTogether_failsCompilation` - Verifies @ExcludeInDto dtos+value triggers compilation error.
+
 ## DtoNameConfigTest.java
 
 - `dtoName_isUsedAsProvided` - Verifies the DTO class name and mapper references use the provided name exactly.
@@ -79,5 +87,3 @@ Total tests: 46
 - `defaultPackages_areDerivedFromEntityPackage` - Verifies default package locations when packageName and mapperPackageName are not set.
 - `customDtoPackage_isRespected` - Verifies that an explicit packageName is used for the generated DTO.
 - `customMapperPackage_isRespected` - Verifies that an explicit mapperPackageName is used for the generated mapper.
-
-
