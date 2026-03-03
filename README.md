@@ -26,39 +26,33 @@ Manual DTOs and mappers are repetitive, error-prone, and easy to drift from the 
 - Maven or Gradle build with annotation processing enabled
 
 ## Installation (Maven)
-Add the dependency and the annotation processor path.
+Add the JitPack repository and the dependency. This simple setup lets Maven pick up the
+annotation processor from the compile classpath (no explicit `annotationProcessorPaths` needed).
 
 ```xml
+<repositories>
+  <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+  </repository>
+</repositories>
+
 <dependencies>
   <dependency>
-    <groupId>io.github.salindagunarathna</groupId>
+    <groupId>com.github.SalindaGunarathna</groupId>
     <artifactId>dtobase</artifactId>
-    <version>0.1.1</version>
+    <version>v0.1.1</version>
+    <scope>provided</scope>
+  </dependency>
+  <dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
     <scope>provided</scope>
   </dependency>
 </dependencies>
-
-<build>
-  <plugins>
-    <plugin>
-      <groupId>org.apache.maven.plugins</groupId>
-      <artifactId>maven-compiler-plugin</artifactId>
-      <version>3.13.0</version>
-      <configuration>
-        <annotationProcessorPaths>
-          <path>
-            <groupId>io.github.salindagunarathna</groupId>
-            <artifactId>dtobase</artifactId>
-            <version>0.1.1</version>
-          </path>
-        </annotationProcessorPaths>
-      </configuration>
-    </plugin>
-  </plugins>
-</build>
 ```
 
-Replace the version with your published release version.
+Replace the version with your published release tag (JitPack uses Git tags).
 
 ## Quick Start
 
